@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Container, TextField, Button, Typography, Paper, Snackbar, Alert } from '@mui/material';
 import authService from '../services/authService';
+import logo from '../assets/logo.png';
+import backgroundImage from '../assets/bg.jpg';
 
 const Login = () => {
   const [username, setUsername] = useState('');
@@ -39,10 +41,18 @@ const Login = () => {
   };
 
   return (
-    <Container component="main" maxWidth="xs"style={{ marginTop: '150px' }}>
+    <Container component="main" maxWidth="xs" style={{
+      minHeight: '100vh',
+      minWidth: '100vw',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      background: `url(${backgroundImage}) no-repeat center center`,
+      backgroundSize: 'cover'
+    }}>
       <Paper elevation={3} style={{ padding: '20px', marginTop: '20px' }}>
-        <Typography component="h1" variant="h5" align="center">
-          Login
+      <Typography component="h1" variant="h5" align="center">
+          <img src={logo} alt="Logo" style={{ maxWidth: '100px', maxHeight: '100px' }} />
         </Typography>
         <form onSubmit={handleLogin} style={{ marginTop: '10px' }}>
           <TextField
