@@ -2,190 +2,158 @@ import React, { useEffect } from "react";
 import gantt from "dhtmlx-gantt";
 import "dhtmlx-gantt/codebase/dhtmlxgantt.css";
 import axios from "axios";
-import "date-format-lite";
 
 const GanttChart = ({ projectId }) => {
   useEffect(() => {
+    // Konfigurasi format tanggal di Gantt
     gantt.config.xml_date = "%Y-%m-%d %H:%i:%s";
-    gantt.config.date_format = "%Y-%m-%d %H:%i:%s";
 
-    const formatDateForGantt = (date) => {
-      if (!date) return null; // Handle null or undefined dates
-      const d = new Date(date);
-      if (isNaN(d.getTime())) return null; // Handle invalid date
-      return gantt.date.date_to_str("%Y-%m-%d %H:%i:%s")(d);
-    };
-
-    const fetchData = async () => {
-      try {
-        const response = await axios.get(
-          `http://localhost:5000/api/projects/${projectId}/tasks`
-        );
-        gantt.clearAll();
-        console.log(response.data);
-
-        // Format start_date and end_date
-        response.data.data.forEach((task) => {
-          task.start_date = formatDateForGantt(task.start_date);
-          task.end_date = formatDateForGantt(task.end_date);
-        });
-
-        gantt.parse(response.data);
-      } catch (error) {
-        console.error("Failed to fetch tasks:", error);
-      }
-    };
-
+    // Helper: Format Date ke String
     const formatDate = (date) => {
       const d = new Date(date);
-      if (isNaN(d.getTime())) return null;
-      const year = d.getFullYear();
-      const month = String(d.getMonth() + 1).padStart(2, "0");
-      const day = String(d.getDate()).padStart(2, "0");
-      const hours = String(d.getHours()).padStart(2, "0");
-      const minutes = String(d.getMinutes()).padStart(2, "0");
-      const seconds = String(d.getSeconds()).padStart(2, "0");
-      return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")} ${
+        String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}:${String(d.getSeconds()).padStart(2, "0")}`;
     };
 
-    const createTask = async (task) => {
-      console.log("Creating task:", task);
-      const formattedTask = {
-        ...task,
-        start_date: formatDate(task.start_date),
-        end_date: task.end_date ? formatDate(task.end_date) : null,
-        duration: parseInt(task.duration, 10),
-      };
+    // Fetch data dari server untuk tasks dan links
+    const fetchData = async () => {
       try {
+        const [tasksResponse, linksResponse] = await Promise.all([
+          axios.get(`http://localhost:5000/api/projects/${projectId}/tasks`),
+          axios.get(`http://localhost:5000/api/projects/${projectId}/links`),
+        ]);
+    
+        if (!Array.isArray(tasksResponse.data.data)) {
+          throw new Error("Invalid tasks data format");
+        }
+    
+        console.log("Parsed Data:", {
+          data: tasksResponse.data.data,
+          links: linksResponse.data,
+        });
+    
+        gantt.clearAll();
+        gantt.parse({
+          data: tasksResponse.data.data,
+          links: linksResponse.data,
+        });
+      } catch (error) {
+        console.error("Failed to fetch data:", error.message);
+      }
+    };
+    
+
+    // Create Task
+    const createTask = async (task) => {
+      try {
+        const formattedTask = {
+          text: task.text || "New task", // Default text jika kosong
+          start_date: formatDate(task.start_date),
+          end_date: task.end_date ? formatDate(task.end_date) : null,
+          duration: task.duration || 1, // Default duration jika kosong
+          parent_id: task.parent || null, // Default parent_id NULL untuk task utama
+        };
+
+        // Kirim task ke backend
         const response = await axios.post(
           `http://localhost:5000/api/projects/${projectId}/tasks`,
           formattedTask
         );
-        console.log("Task creation response:", response.data);
-        return response.data || null; // Ensure the backend returns the new task id or null
+
+        // Validasi respons
+        if (!response.data || !response.data.id) {
+          throw new Error("Invalid response from server for task creation");
+        }
+
+        gantt.changeTaskId(task.id, response.data.id); // Update ID di Gantt
+        gantt.updateTask(response.data.id); // Refresh task setelah ID diperbarui
       } catch (error) {
-        console.error(
-          "Failed to create task:",
-          error.response ? error.response.data : error.message
-        );
-        throw error;
+        console.error("Failed to create task:", error.message);
       }
     };
 
+    // Update Task
     const updateTask = async (id, task) => {
-      console.log("Updating task:", id, task);
-      const formattedTask = {
-        ...task,
-        start_date: task.start_date ? formatDate(task.start_date) : null,
-        end_date: task.end_date ? formatDate(task.end_date) : null,
-        duration: parseInt(task.duration, 10),
-      };
-
       try {
+        const formattedTask = {
+          text: task.text,
+          start_date: formatDate(task.start_date),
+          end_date: task.end_date ? formatDate(task.end_date) : null,
+          duration: task.duration,
+        };
+
         await axios.put(
           `http://localhost:5000/api/projects/${projectId}/tasks/${id}`,
           formattedTask
         );
       } catch (error) {
-        console.error("Failed to update task:", error);
+        console.error("Failed to update task:", error.message);
       }
     };
 
+    // Delete Task
     const deleteTask = async (id) => {
-      console.log("Deleting task:", id);
       try {
         await axios.delete(
           `http://localhost:5000/api/projects/${projectId}/tasks/${id}`
         );
       } catch (error) {
-        console.error("Failed to delete task:", error);
+        console.error("Failed to delete task:", error.message);
       }
     };
 
-    fetchData();
+// Event Handler: Create Link
+const createLink = async (link) => {
+  try {
+    console.log("Creating Link:", link); // Debug log untuk memastikan 'type' tersedia
 
+    const formattedLink = {
+      source: link.source,
+      target: link.target,
+      type: link.type || "FS", // Default ke 'FS' jika type tidak diberikan
+    };
+
+    const response = await axios.post(
+      `http://localhost:5000/api/projects/${projectId}/links`,
+      formattedLink
+    );
+
+    gantt.changeLinkId(link.id, response.data.id); // Update ID di Gantt
+  } catch (error) {
+    console.error("Failed to create link:", error.message);
+    gantt.deleteLink(link.id); // Hapus link dari Gantt jika gagal
+  }
+};
+
+// Event Handler: Delete Link
+const deleteLink = async (id) => {
+  try {
+    await axios.delete(`http://localhost:5000/api/projects/${projectId}/links/${id}`);
+  } catch (error) {
+    console.error("Failed to delete link:", error.message);
+  }
+};
+
+// Konfigurasi Event Gantt untuk Link
+gantt.attachEvent("onAfterLinkAdd", (id, link) => {
+  createLink(link);
+});
+
+gantt.attachEvent("onAfterLinkDelete", (id) => {
+  deleteLink(id);
+});
+
+    gantt.attachEvent("onAfterTaskAdd", (id, task) => createTask(task));
+    gantt.attachEvent("onAfterTaskUpdate", (id, task) => updateTask(id, task));
+    gantt.attachEvent("onAfterTaskDelete", (id) => deleteTask(id));
+
+
+    // Inisialisasi Gantt dan Fetch Data
+    fetchData();
     gantt.init("gantt_here");
 
-    // Handle CRUD operations
-    gantt.attachEvent("onTaskCreated", async (item) => {
-      // Retrieve task if item is undefined
-      if (!item) {
-        item = {
-          id: gantt.uid(),
-          text: "New task",
-          start_date: new Date(),
-          duration: 1,
-        };
-        console.log("Created minimal task:", item);
-      }
-
-      // Ensure dates are formatted correctly
-      if (item.start_date) {
-        item.start_date = gantt.date.date_to_str("%Y-%m-%d %H:%i:%s")(
-          new Date(item.start_date)
-        );
-      }
-
-      if (item.end_date) {
-        item.end_date = gantt.date.date_to_str("%Y-%m-%d %H:%i:%s")(
-          new Date(item.end_date)
-        );
-      }
-
-      try {
-        console.log(item);
-        const newTask = await createTask(item);
-        console.log(newTask, "add");
-        // if (newTask) {
-        //   gantt.changeTaskId(item.id, newTask.id);
-        //   gantt.updateTask(newTask.id, {s
-        //     id: newTask.id,
-        //     text: item.text,
-        //     start_date: new Date(newTask.start_date),
-        //     duration: item.duration,
-        //   });
-        //   console.log("Task updated with server data:", newTask);
-        // } else {
-        //   throw new Error("Failed to get new task data from server");
-        // }
-      } catch (error) {
-        console.error("Error creating task:", error);
-        // gantt.deleteTask(item.id);s
-      }
-    });
-
-    gantt.attachEvent("onAfterTaskUpdate", (id) => {
-      console.log(id, "update");
-      const item = gantt.getTask(id);
-      console.log("Task updated with ID:", id, "and item:", item);
-
-      if (!item) {
-        console.error("Task update failed: item is undefined");
-        return;
-      }
-
-      if (item.start_date) {
-        item.start_date = new Date(item.start_date);
-      }
-
-      if (item.end_date) {
-        item.end_date = new Date(item.end_date);
-        console.log("masuk");
-        console.log(item.end_date);
-      }
-
-      console.log(item);
-      updateTask(id, item);
-    });
-
-    gantt.attachEvent("onAfterTaskDelete", (id) => {
-      console.log("Task deleted with ID:", id);
-      deleteTask(id);
-    });
-
-    return () => {
-      gantt.clearAll();
-    };
+    // Cleanup on Unmount
+    return () => gantt.clearAll();
   }, [projectId]);
 
   return <div id="gantt_here" style={{ width: "100%", height: "500px" }}></div>;
