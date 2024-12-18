@@ -1,17 +1,23 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import gantt from "dhtmlx-gantt";
 import "dhtmlx-gantt/codebase/dhtmlxgantt.css";
 import axios from "axios";
 
 const GanttChart = ({ projectId }) => {
+  const [timelineView, setTimelineView] = useState("quarters");
   useEffect(() => {
     gantt.config.xml_date = "%Y-%m-%d %H:%i:%s";
     gantt.config.show_progress = true;
     gantt.templates.progress_text = function (start, end, task) {
       return `<span style="position: absolute; left: 5px; color: white; font-weight: bold;">${Math.round(task.progress * 100)}%</span>`;
     };
-    
-    
+    gantt.templates.task_text = function (start, end, task) {
+      return ""; // Menghilangkan text pada task
+    };
+    gantt.plugins({ 
+      tooltip: true 
+  });
+  gantt.skin = "dark";
 
     const formatDate = (date) => {
       const d = new Date(date);
@@ -148,13 +154,78 @@ const GanttChart = ({ projectId }) => {
     gantt.attachEvent("onAfterTaskUpdate", (id, task) => updateTask(id, task));
     gantt.attachEvent("onAfterTaskDelete", (id) => deleteTask(id));
 
+    const setTimelineScale = (scale) => {
+      switch (scale) {
+        case "years":
+          gantt.config.scale_unit = "year";
+          gantt.config.date_scale = "%Y";
+          gantt.config.subscales = [{ unit: "month", step: 1, date: "%M" }];
+          break;
+        case "quarters":
+          gantt.config.scale_unit = "quarter";
+          gantt.config.date_scale = "Q%q %Y";
+          gantt.config.subscales = [{ unit: "month", step: 1, date: "%M" }];
+          break;
+        case "months":
+          gantt.config.scale_unit = "month";
+          gantt.config.date_scale = "%F %Y";
+          gantt.config.subscales = [{ unit: "week", step: 1, date: "Week #%W" }];
+          break;
+        case "weeks":
+          gantt.config.scale_unit = "week";
+          gantt.config.date_scale = "Week #%W";
+          gantt.config.subscales = [{ unit: "day", step: 1, date: "%d %M" }];
+          break;
+        case "days":
+          gantt.config.scale_unit = "day";
+          gantt.config.date_scale = "%d %M";
+          gantt.config.subscales = [{ unit: "hour", step: 1, date: "%H:%i" }];
+          break;
+        case "hours":
+          gantt.config.scale_unit = "hour";
+          gantt.config.date_scale = "%H:%i";
+          gantt.config.subscales = [{ unit: "day", step: 1, date: "%d %M" }];
+          break;
+        default:
+          break;
+      }
+      gantt.render();
+    };
+    // Inisialisasi awal dengan tampilan hari
+    setTimelineScale(timelineView);
+
     fetchData();
     gantt.init("gantt_here");
 
     return () => gantt.clearAll();
-  }, [projectId]);
+  }, [projectId,timelineView]);
 
-  return <div id="gantt_here" style={{ width: "100%", height: "500px" }}></div>;
+  return (
+    <div>
+      {/* Timeline Switcher */}
+      {/* Dropdown Timeline Switcher */}
+      <div style={{ marginBottom: "10px" }}>
+        <label style={{ marginRight: "10px", fontWeight: "bold" }}>
+          Zoom to:
+        </label>
+        <select
+          value={timelineView}
+          onChange={(e) => setTimelineView(e.target.value)}
+          style={{ padding: "5px", fontSize: "14px" }}
+        >
+          <option value="years">Years</option>
+          <option value="quarters">Quarters</option>
+          <option value="months">Months</option>
+          <option value="weeks">Weeks</option>
+          <option value="days">Days</option>
+          <option value="hours">Hours</option>
+        </select>
+      </div>
+
+      {/* Gantt Chart */}
+      <div id="gantt_here" style={{ width: "100%", height: "500px" }}></div>
+    </div>
+  );
 };
 
 export default GanttChart;
