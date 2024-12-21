@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Container, TextField, Button, Typography, Box, Paper, Snackbar, Alert, MenuItem, Checkbox, FormControlLabel, InputAdornment } from '@mui/material';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import Modal from '@mui/material/Modal';
 
 const CreateProject = () => {
   const [name, setName] = useState('');
@@ -15,6 +16,9 @@ const CreateProject = () => {
   const [lineOfBusiness, setLineOfBusiness] = useState('');
   const [projectLeader, setProjectLeader] = useState('');
   const [projectLeaders, setProjectLeaders] = useState([]);
+  const [teamMembers, setTeamMembers] = useState([]);
+  const [availableTeamMembers, setAvailableTeamMembers] = useState([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [open, setOpen] = useState(false);
@@ -22,6 +26,14 @@ const CreateProject = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const response = await axios.get('http://localhost:5000/api/users/executions');
+        setAvailableTeamMembers(response.data);
+      } catch (error) {
+        console.error('Failed to fetch users:', error);
+      }
+    };
     const fetchProjectLeaders = async () => {
       try {
         const response = await axios.get('http://localhost:5000/api/users/executions');
@@ -30,9 +42,18 @@ const CreateProject = () => {
         console.error('Failed to fetch project leaders:', error);
       }
     };
-
+    fetchUsers();
     fetchProjectLeaders();
   }, []);
+
+  const handleAddTeamMember = (user) => {
+    if (!teamMembers.some((member) => member.id === user.id)) {
+      setTeamMembers([...teamMembers, user]);
+    }
+  };
+  const handleRemoveTeamMember = (id) => {
+    setTeamMembers(teamMembers.filter((member) => member.id !== id));
+  };
 
   const handleCreateProject = async (e) => {
     e.preventDefault();
@@ -41,6 +62,20 @@ const CreateProject = () => {
       setErrorOpen(true);
       return;
     }
+
+    console.log('Payload:', {
+      name,
+      jobOwner,
+      startDate,
+      endDate,
+      projectWarrantyDuration,
+      contractValue,
+      sourceOfFunds,
+      lineOfBusiness,
+      projectLeader,
+      hasProjectWarranty,
+      teamMembers: teamMembers.map((member) => member.id),
+    });
 
     try {
       await axios.post('http://localhost:5000/api/projects', { 
@@ -53,7 +88,8 @@ const CreateProject = () => {
         sourceOfFunds, 
         lineOfBusiness, 
         projectLeader, 
-        hasProjectWarranty 
+        hasProjectWarranty,
+        teamMembers: teamMembers.map((member) => member.id)
       });
       setSuccess('Project created successfully');
       setOpen(true);
@@ -70,6 +106,9 @@ const CreateProject = () => {
     setOpen(false);
     setErrorOpen(false);
   };
+
+  const handleOpenModal = () => setIsModalOpen(true);
+  const handleCloseModal = () => setIsModalOpen(false);
 
   return (
     <Container component="main" maxWidth="sm">
@@ -208,11 +247,76 @@ const CreateProject = () => {
               </MenuItem>
             ))}
           </TextField>
+          <Box sx={{ mt: 3 }}>
+            <Button variant="contained" color="primary" onClick={handleOpenModal}>
+              Add Team Member
+            </Button>
+          </Box>
+
+          <Box sx={{ mt: 2 }}>
+            {teamMembers.length === 0 ? (
+              <Typography>No team members added yet.</Typography>
+            ) : (
+              teamMembers.map((member) => (
+                <Box key={member.id} display="flex" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
+                  <Typography>{member.name}</Typography>
+                  <Button
+                    variant="outlined"
+                    color="error"
+                    onClick={() => handleRemoveTeamMember(member.id)}
+                  >
+                    Remove
+                  </Button>
+                </Box>
+              ))
+            )}
+          </Box>
+
           <Button type="submit" fullWidth variant="contained" color="primary" sx={{ mt: 3 }}>
             Create
           </Button>
         </form>
       </Paper>
+
+      <Modal open={isModalOpen} onClose={handleCloseModal}>
+        <Box
+          sx={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            width: 400,
+            bgcolor: 'background.paper',
+            border: '2px solid #000',
+            boxShadow: 24,
+            p: 4,
+          }}
+        >
+          <Typography variant="h6" align="center" sx={{ mb: 2 }}>
+            Select Team Members
+          </Typography>
+          {availableTeamMembers.map((user) => (
+            <Box key={user.id} display="flex" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
+              <Typography>{user.name}</Typography>
+              <Button
+                variant="contained"
+                color={teamMembers.some((member) => member.id === user.id) ? 'error' : 'primary'}
+                onClick={() =>
+                  teamMembers.some((member) => member.id === user.id)
+                    ? handleRemoveTeamMember(user.id)
+                    : handleAddTeamMember(user)
+                }
+              >
+                {teamMembers.some((member) => member.id === user.id) ? 'Remove' : 'Add'}
+              </Button>
+            </Box>
+          ))}
+          <Button variant="outlined" fullWidth onClick={handleCloseModal} sx={{ mt: 2 }}>
+            Close
+          </Button>
+        </Box>
+      </Modal>
+      
       <Snackbar open={open} autoHideDuration={6000} onClose={handleClose}>
         <Alert onClose={handleClose} severity="success" sx={{ width: '100%' }}>
           {success}
@@ -228,3 +332,4 @@ const CreateProject = () => {
 };
 
 export default CreateProject;
+

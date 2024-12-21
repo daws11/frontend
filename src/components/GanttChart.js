@@ -17,7 +17,7 @@ const GanttChart = ({ projectId }) => {
     gantt.plugins({ 
       tooltip: true 
   });
-  gantt.skin = "dark";
+  
 
     const formatDate = (date) => {
       const d = new Date(date);

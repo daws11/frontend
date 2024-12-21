@@ -5,12 +5,11 @@ import {
   ListItem,
   ListItemIcon,
   ListItemText,
-  Box,
-  Avatar,
   IconButton,
   Typography,
   Divider,
   Tooltip,
+  Avatar,
 } from '@mui/material';
 import {
   Home,
@@ -43,41 +42,36 @@ const Layout = ({ children }) => {
   };
 
   return (
-    <Box sx={{ display: 'flex' }}>
+    <div className="flex">
       <Drawer
         sx={{
-          width: isDrawerOpen ? 240 : 60, // Adjust width based on drawer state
+          width: isDrawerOpen ? 240 : 60,
           flexShrink: 0,
           '& .MuiDrawer-paper': {
             width: isDrawerOpen ? 240 : 60,
             boxSizing: 'border-box',
             transition: 'width 0.3s',
+            backgroundColor: '#0D92F4', // Set drawer background color to blue
+            color: 'white', // Set text color to white
           },
         }}
         variant="permanent"
         anchor="left"
       >
-        <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+        <div className="flex flex-col h-full">
           {/* Logo and Hamburger Button */}
-          <Box
-            sx={{
-              p: 2,
-              display: 'flex',
-              justifyContent: isDrawerOpen ? 'space-between' : 'center',
-              alignItems: 'center',
-            }}
-          >
+          <div className={`p-2 flex ${isDrawerOpen ? 'justify-between' : 'justify-center'} items-center`}>
             {isDrawerOpen && (
               <img
                 src={logo}
                 alt="Logo"
-                style={{ maxWidth: '80%', height: 'auto' }}
+                className="max-w-[80%] h-auto"
               />
             )}
-            <IconButton onClick={toggleDrawer}>
+            <IconButton onClick={toggleDrawer} className="text-white">
               <MenuIcon />
             </IconButton>
-          </Box>
+          </div>
 
           {/* Menu List */}
           <List>
@@ -87,12 +81,9 @@ const Layout = ({ children }) => {
                 component={Link}
                 to="/"
                 selected={isActive('/')}
-                sx={{
-                  justifyContent: isDrawerOpen ? 'flex-start' : 'center',
-                  px: isDrawerOpen ? 2 : 0,
-                }}
+                className={`justify-${isDrawerOpen ? 'start' : 'center'} px-${isDrawerOpen ? 2 : 0}`}
               >
-                <ListItemIcon>
+                <ListItemIcon className="text-white">
                   <Home />
                 </ListItemIcon>
                 {isDrawerOpen && <ListItemText primary="Home" />}
@@ -106,12 +97,9 @@ const Layout = ({ children }) => {
                   component={Link}
                   to="/projects"
                   selected={isActive('/projects')}
-                  sx={{
-                    justifyContent: isDrawerOpen ? 'flex-start' : 'center',
-                    pl: isDrawerOpen ? 4 : 0,
-                  }}
+                  className={`justify-${isDrawerOpen ? 'start' : 'center'} pl-${isDrawerOpen ? 4 : 0}`}
                 >
-                  <ListItemIcon>
+                  <ListItemIcon className="text-white">
                     <Folder />
                   </ListItemIcon>
                   {isDrawerOpen && <ListItemText primary="Project List" />}
@@ -123,12 +111,9 @@ const Layout = ({ children }) => {
                   component={Link}
                   to="/create-project"
                   selected={isActive('/create-project')}
-                  sx={{
-                    justifyContent: isDrawerOpen ? 'flex-start' : 'center',
-                    pl: isDrawerOpen ? 4 : 0,
-                  }}
+                  className={`justify-${isDrawerOpen ? 'start' : 'center'} pl-${isDrawerOpen ? 4 : 0}`}
                 >
-                  <ListItemIcon>
+                  <ListItemIcon className="text-white">
                     <AddBox />
                   </ListItemIcon>
                   {isDrawerOpen && <ListItemText primary="Create Project" />}
@@ -138,33 +123,33 @@ const Layout = ({ children }) => {
           </List>
 
           {/* Footer with User Info */}
-          <Box sx={{ flexGrow: 1 }} />
+          <div className="flex-grow" />
           {user && (
-            <Box sx={{ p: 2, textAlign: 'center' }}>
-              <Divider />
+            <div className="p-2 text-center">
+              <Divider className="bg-white" />
               {isDrawerOpen && (
-                <Box sx={{ display: 'flex', alignItems: 'center', mt: 2 }}>
+                <div className="flex items-center mt-2">
                   <Avatar
                     alt={user.name}
                     src={`http://localhost:5000/uploads/${user.photoProfile}`}
-                    sx={{ width: 60, height: 60, mr: 2 }}
+                    className="w-15 h-15 mr-2"
                   />
                   <Typography variant="h6">{user.name}</Typography>
-                </Box>
+                </div>
               )}
-              <IconButton onClick={handleLogout} sx={{ mt: 2 }}>
+              <IconButton onClick={handleLogout} className="mt-2 text-white">
                 <ExitToApp />
               </IconButton>
-            </Box>
+            </div>
           )}
-        </Box>
+        </div>
       </Drawer>
 
       {/* Main Content */}
-      <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
+      <main className="flex-grow p-3">
         {children}
-      </Box>
-    </Box>
+      </main>
+    </div>
   );
 };
 
