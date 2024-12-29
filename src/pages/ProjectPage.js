@@ -2,17 +2,19 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useParams } from 'react-router-dom';
 import GanttChart from '../components/GanttChart';
+import ChatPopup from '../components/ChatPopup'; // Tambahkan ini
 import {
   ChevronUpIcon,
   ChevronDownIcon,
   OfficeBuildingIcon,
   ClockIcon,
   CashIcon,
-  CurrencyDollarIcon, // Replacing BankIcon with CurrencyDollarIcon
+  CurrencyDollarIcon,
   TagIcon,
   UserGroupIcon,
   UserIcon,
   CalendarIcon,
+  ChatIcon // Tambahkan ini
 } from '@heroicons/react/outline';
 
 const ProjectPage = () => {
@@ -23,6 +25,7 @@ const ProjectPage = () => {
   const [teamMembers, setTeamMembers] = useState([]);
   const [isProjectInfoCollapsed, setIsProjectInfoCollapsed] = useState(true);
   const [isTeamInfoCollapsed, setIsTeamInfoCollapsed] = useState(true);
+  const [isChatOpen, setIsChatOpen] = useState(false); // Tambahkan ini
 
   useEffect(() => {
     const fetchProject = async () => {
@@ -222,6 +225,23 @@ const ProjectPage = () => {
       <div className="mt-8">
         <GanttChart tasks={tasks} projectId={id} />
       </div>
+
+      <button 
+        onClick={() => setIsChatOpen(true)} // Tambahkan ini
+        className="fixed bottom-8 right-8 p-4 bg-[#008069] text-white rounded-full shadow-lg hover:bg-[#015e4e] transition-colors"
+      >
+        <ChatIcon className="h-6 w-6" />
+      </button>
+
+      {isChatOpen && (
+        <ChatPopup 
+          projectId={id} 
+          projectName={project.name} 
+          teamMembers={teamMembers} 
+          projectLeaderName={projectLeaderName} 
+          onClose={() => setIsChatOpen(false)} 
+        />
+      )}
     </div>
   );
 };
