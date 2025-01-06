@@ -223,7 +223,7 @@ const ProjectPage = () => {
       </div>
 
       <div className="mt-8">
-        <GanttChart tasks={tasks} projectId={id} />
+        <GanttChart tasks={tasks} projectId={id} teamMembers={teamMembers} />
       </div>
 
       <button 

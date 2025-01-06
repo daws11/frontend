@@ -10,7 +10,7 @@ module.exports = {
         'light-blue': '#77CDFF',
         'light-red': '#F95454',
         red: '#C62E2E',
-        white: '#FFCFEF',
+        white: '#d5dfed',
       },
     },
   },

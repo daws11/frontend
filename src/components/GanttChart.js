@@ -3,21 +3,142 @@ import gantt from "dhtmlx-gantt";
 import "dhtmlx-gantt/codebase/dhtmlxgantt.css";
 import axios from "axios";
 
-const GanttChart = ({ projectId }) => {
-  const [timelineView, setTimelineView] = useState("quarters");
+const GanttChart = ({ projectId, teamMembers }) => {
+  const [timelineView, setTimelineView] = useState("months");
+
   useEffect(() => {
     gantt.config.xml_date = "%Y-%m-%d %H:%i:%s";
     gantt.config.show_progress = true;
+    gantt.config.drag_progress = true;
+
+    // Progress text inside task bar
     gantt.templates.progress_text = function (start, end, task) {
-      return `<span style="position: absolute; left: 5px; color: white; font-weight: bold;">${Math.round(task.progress * 100)}%</span>`;
+      return `${Math.round(task.progress * 100)}%`;
     };
+
+    // User name on right side
+    gantt.templates.rightside_text = function (start, end, task) {
+      const assignedTo = teamMembers.find(member => member.id === task.assigned_to);
+      return assignedTo ? assignedTo.name : "Unassigned";
+    };
+
+    // Clear main task text since we're using rightside_text
     gantt.templates.task_text = function (start, end, task) {
-      return ""; // Menghilangkan text pada task
+      return "";
     };
-    gantt.plugins({ 
-      tooltip: true 
-  });
-  
+    gantt.plugins({ tooltip: true });
+
+    gantt.form_blocks["assigned_select"] = {
+      render: function(sns) {
+        const options = [
+          "<option value=''>Unassigned</option>",
+          ...teamMembers.map(member => 
+            `<option value='${member.id}'>${member.name}</option>`
+          )
+        ].join("");
+        return "<div class='gantt_cal_ltext'><select>" + options + "</select></div>";
+      },
+      set_value: function(node, value, task) {
+        node.querySelector("select").value = value || "";
+      },
+      get_value: function(node, task) {
+        return node.querySelector("select").value || null;
+      }
+    };
+
+    gantt.form_blocks["priority_select"] = {
+      render: function(sns) {
+        const options = [
+          "<option value='1'>High</option>",
+          "<option value='2'>Normal</option>",
+          "<option value='3'>Low</option>"
+        ].join("");
+        return "<div class='gantt_cal_ltext'><select>" + options + "</select></div>";
+      },
+      set_value: function(node, value, task) {
+        node.querySelector("select").value = value || "2";
+      },
+      get_value: function(node, task) {
+        return node.querySelector("select").value;
+      }
+    };
+
+    gantt.config.lightbox.sections = [
+      { name: "description", height: 34, map_to: "text", type: "textarea", focus: true },
+      { 
+        name: "priority", 
+        height: 30, 
+        map_to: "priority", 
+        type: "priority_select"
+      },
+      { 
+        name: "assigned_to", 
+        height: 30, 
+        map_to: "assigned_to", 
+        type: "assigned_select"
+      },
+      { name: "time", height: 72, type: "duration", map_to: "auto" }
+    ];
+
+    gantt.locale.labels.section_assigned_to = "Assigned To";
+    gantt.locale.labels.section_priority = "Priority";
+
+    gantt.templates.task_class = function(start, end, task) {
+      switch (parseInt(task.priority)) {
+        case 1: return "high-priority";
+        case 3: return "low-priority";
+        default: return "normal-priority";
+      }
+    };
+
+    const taskStyles = document.createElement('style');
+taskStyles.innerHTML = `
+  /* Priority colors with hover effects */
+  .high-priority .gantt_task_content,
+  .high-priority .gantt_task_progress {
+    background: #ff5252;
+  }
+
+  .normal-priority .gantt_task_content,
+  .normal-priority .gantt_task_progress {
+    background: #2196F3;
+  }
+
+  .low-priority .gantt_task_content,
+  .low-priority .gantt_task_progress {
+    background: #4CAF50;
+  }
+
+
+  /* Progress bar styling */
+  .gantt_task_progress {
+    text-align: center;
+    z-index: 2;
+    opacity: 0.8;
+  }
+
+  /* Progress text styling */
+  .gantt_task_progress_text {
+    position: absolute;
+    z-index: 3;
+    color: #fff;
+    font-weight: bold;
+    font-size: 12px;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    text-shadow: 1px 1px 1px rgba(0,0,0,0.2);
+    pointer-events: none;
+    white-space: nowrap;
+  }
+
+  /* Task content styling */
+  .gantt_task_content {
+    opacity: 0.4;
+  }
+
+`;
+document.head.appendChild(taskStyles);
 
     const formatDate = (date) => {
       const d = new Date(date);
@@ -36,11 +157,19 @@ const GanttChart = ({ projectId }) => {
           throw new Error("Invalid data format from server");
         }
 
+        const transformedTasks = tasksResponse.data.data.map(task => ({
+          ...task,
+          start_date: new Date(task.start_date),
+          end_date: task.end_date ? new Date(task.end_date) : null,
+          assigned_to: task.assigned_to || null, // Ensure assigned_to is explicitly set
+          priority: task.priority || "2" // Default to Normal priority
+        }));
+
         gantt.clearAll();
-        console.log("Tasks Data:", tasksResponse.data.data);
+        console.log("Tasks Data:", transformedTasks);
         console.log("Links Data:", linksResponse.data);
         gantt.parse({
-          data: tasksResponse.data.data,
+          data: transformedTasks,
           links: linksResponse.data,
         });
       } catch (error) {
@@ -55,7 +184,9 @@ const GanttChart = ({ projectId }) => {
           start_date: formatDate(task.start_date),
           end_date: task.end_date ? formatDate(task.end_date) : null,
           duration: task.duration || 1,
-          progress: task.progress || 0.0, // Mengirim nilai progress
+          progress: task.progress || 0.0,
+          assigned_to: task.assigned_to, // Ensure this field is included
+          priority: task.priority || "2", // Default to Normal priority
           parent_id: task.parent || null,
         };
 
@@ -82,7 +213,9 @@ const GanttChart = ({ projectId }) => {
           start_date: formatDate(task.start_date),
           end_date: task.end_date ? formatDate(task.end_date) : null,
           duration: task.duration,
-          progress: task.progress || 0.0, // Mengirim nilai progress
+          progress: task.progress || 0.0,
+          assigned_to: task.assigned_to, // Ensure this field is included
+          priority: task.priority
         };
 
         await axios.put(
@@ -93,6 +226,7 @@ const GanttChart = ({ projectId }) => {
         console.error("Failed to update task:", error.message);
       }
     };
+
     const deleteTask = async (id) => {
       try {
         await axios.delete(
@@ -108,7 +242,7 @@ const GanttChart = ({ projectId }) => {
         const formattedLink = {
           source: link.source,
           target: link.target,
-          type: link.type, // DHTMLX mengharapkan string angka ("0", "1", "2", "3")
+          type: link.type, // DHTMLX expects string numbers ("0", "1", "2", "3")
         };
 
         const response = await axios.post(
@@ -134,10 +268,10 @@ const GanttChart = ({ projectId }) => {
     };
 
     gantt.attachEvent("onBeforeLinkAdd", (id, link) => {
-      const validTypes = ["0", "1", "2", "3"]; // String angka yang valid
+      const validTypes = ["0", "1", "2", "3"]; // Valid string numbers
       if (!validTypes.includes(link.type)) {
         console.warn(`Invalid link type: ${link.type}`);
-        return false; // Batalkan jika type tidak valid
+        return false; // Cancel if type is invalid
       }
       return true;
     });
@@ -191,19 +325,18 @@ const GanttChart = ({ projectId }) => {
       }
       gantt.render();
     };
-    // Inisialisasi awal dengan tampilan hari
+    // Initial setup with the default timeline view
     setTimelineScale(timelineView);
 
     fetchData();
     gantt.init("gantt_here");
 
     return () => gantt.clearAll();
-  }, [projectId,timelineView]);
+  }, [projectId, timelineView, teamMembers]);
 
   return (
     <div>
       {/* Timeline Switcher */}
-      {/* Dropdown Timeline Switcher */}
       <div style={{ marginBottom: "10px" }}>
         <label style={{ marginRight: "10px", fontWeight: "bold" }}>
           Zoom to:
