@@ -10,6 +10,7 @@ const GanttChart = ({ projectId, teamMembers }) => {
     gantt.config.xml_date = "%Y-%m-%d %H:%i:%s";
     gantt.config.show_progress = true;
     gantt.config.drag_progress = true;
+    
 
     // Progress text inside task bar
     gantt.templates.progress_text = function (start, end, task) {
@@ -26,7 +27,15 @@ const GanttChart = ({ projectId, teamMembers }) => {
     gantt.templates.task_text = function (start, end, task) {
       return "";
     };
-    gantt.plugins({ tooltip: true });
+    gantt.plugins({ 
+      tooltip: true,
+      multiselect: true,
+      drag_timeline: true
+    });
+    gantt.config.drag_timeline = {
+      ignore:".gantt_task_line, .gantt_task_link",
+      useKey: false,
+  };
 
     gantt.form_blocks["assigned_select"] = {
       render: function(sns) {
