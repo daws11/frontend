@@ -6,6 +6,7 @@ import {
   TooltipTrigger,
 } from "./ui/tooltip";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
+import { BASE_URL } from '../config';
 
 export const TeamMemberCard = ({ member }) => (
   <TooltipProvider>
@@ -13,7 +14,7 @@ export const TeamMemberCard = ({ member }) => (
       <TooltipTrigger asChild>
         <div className="flex items-center space-x-2">
           <Avatar className="h-8 w-8">
-            <AvatarImage src={`http://localhost:5000/uploads/${member.photoProfile}`} />
+            <AvatarImage src={`${BASE_URL}/uploads/${member.photoProfile}`} />
             <AvatarFallback>{member.name?.charAt(0)}</AvatarFallback>
           </Avatar>
           <div className="overflow-hidden">

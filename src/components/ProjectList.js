@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
+import { BASE_URL } from '../config';
 
 const ProjectList = () => {
   const [projects, setProjects] = useState([]);
@@ -8,7 +9,7 @@ const ProjectList = () => {
   useEffect(() => {
     const fetchProjects = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/projects');
+        const response = await axios.get(`${BASE_URL}/api/projects`);
         setProjects(response.data);
       } catch (error) {
         console.error('Failed to fetch projects:', error);
@@ -20,7 +21,7 @@ const ProjectList = () => {
 
   const handleDelete = async (id) => {
     try {
-      await axios.delete(`http://localhost:5000/api/projects/${id}`);
+      await axios.delete(`${BASE_URL}/api/projects/${id}`);
       setProjects(projects.filter((project) => project.id !== id));
     } catch (error) {
       console.error('Failed to delete project:', error);

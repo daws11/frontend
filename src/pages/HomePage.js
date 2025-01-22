@@ -7,6 +7,7 @@ import {
 import ChartSection from '../components/ChartSection';
 import TaskDetailTable from '../components/TaskDetailTable';
 import StatsSection from '../components/StatsSection';
+import { BASE_URL } from '../config';
 
 const HomePage = () => {
   const [projectNames, setProjectNames] = useState([]);
@@ -17,7 +18,7 @@ const HomePage = () => {
   useEffect(() => {
     const fetchProjectNames = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/home/project-names');
+        const response = await axios.get(`${BASE_URL}/api/home/project-names`);
         setProjectNames(response.data);
         if (response.data.length > 0) {
           setSelectedProject(response.data[0].id);
@@ -34,7 +35,7 @@ const HomePage = () => {
     if (selectedProject) {
       const fetchProjectDetails = async () => {
         try {
-          const response = await axios.get(`http://localhost:5000/api/projects/${selectedProject}`);
+          const response = await axios.get(`${BASE_URL}/api/projects/${selectedProject}`);
           setProjectDetails(response.data);
         } catch (error) {
           console.error('Failed to fetch project details:', error);
@@ -43,7 +44,7 @@ const HomePage = () => {
 
       const fetchTasks = async () => {
         try {
-          const response = await axios.get(`http://localhost:5000/api/home/projects/${selectedProject}/tasks`);
+          const response = await axios.get(`${BASE_URL}/api/home/projects/${selectedProject}/tasks`);
           setTasks(response.data);
         } catch (error) {
           console.error('Failed to fetch tasks:', error);

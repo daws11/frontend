@@ -3,6 +3,7 @@ import { Container, TextField, Button, Typography, Box, Paper, Snackbar, Alert, 
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import Modal from '@mui/material/Modal';
+import { BASE_URL } from '../config';
 
 const CreateProject = () => {
   const [name, setName] = useState('');
@@ -28,7 +29,7 @@ const CreateProject = () => {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/users/executions');
+        const response = await axios.get(`${BASE_URL}/api/users/executions`);
         setAvailableTeamMembers(response.data);
       } catch (error) {
         console.error('Failed to fetch users:', error);
@@ -36,7 +37,7 @@ const CreateProject = () => {
     };
     const fetchProjectLeaders = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/users/executions');
+        const response = await axios.get(`${BASE_URL}/api/users/executions`);
         setProjectLeaders(response.data);
       } catch (error) {
         console.error('Failed to fetch project leaders:', error);
@@ -78,7 +79,7 @@ const CreateProject = () => {
     });
 
     try {
-      await axios.post('http://localhost:5000/api/projects', { 
+      await axios.post(`${BASE_URL}/api/projects`, { 
         name, 
         jobOwner, 
         startDate, 
@@ -332,4 +333,3 @@ const CreateProject = () => {
 };
 
 export default CreateProject;
-

@@ -23,6 +23,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import authService from '../services/authService';
 import logo from '../assets/logo.png';
 import CollapsibleSection from './CollapsibleSection';
+import { BASE_URL } from '../config';
 
 const Layout = ({ children }) => {
   const navigate = useNavigate();
@@ -131,7 +132,7 @@ const Layout = ({ children }) => {
                 <div className="flex items-center mt-2">
                   <Avatar
                     alt={user.name}
-                    src={`http://localhost:5000/uploads/${user.photoProfile}`}
+                    src={`${BASE_URL}/uploads/${user.photoProfile}`}
                     className="w-15 h-15 mr-2"
                   />
                   <Typography variant="h6">{user.name}</Typography>

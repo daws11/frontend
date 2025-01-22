@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useParams } from 'react-router-dom';
 import GanttChart from '../components/GanttChart';
-import ChatPopup from '../components/ChatPopup'; // Tambahkan ini
+import ChatPopup from '../components/ChatPopup';
+import { BASE_URL } from '../config'; // Tambahkan ini
 import {
   ChevronUpIcon,
   ChevronDownIcon,
@@ -14,7 +15,7 @@ import {
   UserGroupIcon,
   UserIcon,
   CalendarIcon,
-  ChatIcon // Tambahkan ini
+  ChatIcon
 } from '@heroicons/react/outline';
 
 const ProjectPage = () => {
@@ -25,15 +26,15 @@ const ProjectPage = () => {
   const [teamMembers, setTeamMembers] = useState([]);
   const [isProjectInfoCollapsed, setIsProjectInfoCollapsed] = useState(true);
   const [isTeamInfoCollapsed, setIsTeamInfoCollapsed] = useState(true);
-  const [isChatOpen, setIsChatOpen] = useState(false); // Tambahkan ini
+  const [isChatOpen, setIsChatOpen] = useState(false);
 
   useEffect(() => {
     const fetchProject = async () => {
       try {
-        const response = await axios.get(`http://localhost:5000/api/projects/${id}`);
+        const response = await axios.get(`${BASE_URL}/api/projects/${id}`);
         setProject(response.data);
 
-        const leaderResponse = await axios.get(`http://localhost:5000/api/users/${response.data.project_leader}`);
+        const leaderResponse = await axios.get(`${BASE_URL}/api/users/${response.data.project_leader}`);
         setProjectLeaderName(leaderResponse.data.name);
       } catch (error) {
         console.error('Failed to fetch project:', error);
@@ -42,7 +43,7 @@ const ProjectPage = () => {
 
     const fetchTasks = async () => {
       try {
-        const response = await axios.get(`http://localhost:5000/api/projects/${id}/tasks`);
+        const response = await axios.get(`${BASE_URL}/api/projects/${id}/tasks`);
         setTasks(response.data);
       } catch (error) {
         console.error('Failed to fetch tasks:', error);
@@ -51,7 +52,7 @@ const ProjectPage = () => {
 
     const fetchTeamMembers = async () => {
       try {
-        const response = await axios.get(`http://localhost:5000/api/projects/${id}/team-members`);
+        const response = await axios.get(`${BASE_URL}/api/projects/${id}/team-members`);
         setTeamMembers(response.data);
       } catch (error) {
         console.error('Failed to fetch team members:', error);
@@ -227,7 +228,7 @@ const ProjectPage = () => {
       </div>
 
       <button 
-        onClick={() => setIsChatOpen(true)} // Tambahkan ini
+        onClick={() => setIsChatOpen(true)}
         className="fixed bottom-8 right-8 p-4 bg-[#008069] text-white rounded-full shadow-lg hover:bg-[#015e4e] transition-colors"
       >
         <ChatIcon className="h-6 w-6" />

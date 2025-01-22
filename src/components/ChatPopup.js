@@ -3,6 +3,7 @@ import io from 'socket.io-client';
 import axios from 'axios';
 import authService from '../services/authService';
 import { Send, X, MoreVertical, Image, Video, Trash2 } from 'lucide-react';
+import { BASE_URL } from '../config';
 
 const ChatPopup = ({ projectId, projectName, teamMembers, projectLeaderName, onClose }) => {
   const [messages, setMessages] = useState([]);
@@ -13,12 +14,12 @@ const ChatPopup = ({ projectId, projectName, teamMembers, projectLeaderName, onC
 
   useEffect(() => {
     // Initialize socket connection
-    socketRef.current = io('http://localhost:5000'); // Pastikan URL ini benar
+    socketRef.current = io(BASE_URL); // Pastikan URL ini benar
 
     // Load messages from database
     const fetchMessages = async () => {
       try {
-        const response = await axios.get(`http://localhost:5000/api/chats/${projectId}`);
+        const response = await axios.get(`${BASE_URL}/api/chats/${projectId}`);
         setMessages(response.data);
       } catch (error) {
         console.error('Failed to fetch messages:', error);
@@ -51,7 +52,7 @@ const ChatPopup = ({ projectId, projectName, teamMembers, projectLeaderName, onC
       }
 
       try {
-        await axios.post('http://localhost:5000/api/chats', formData, {
+        await axios.post(`${BASE_URL}/api/chats`, formData, {
           headers: {
             'Content-Type': 'multipart/form-data'
           }

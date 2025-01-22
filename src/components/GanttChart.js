@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import gantt from "dhtmlx-gantt";
 import "dhtmlx-gantt/codebase/dhtmlxgantt.css";
 import axios from "axios";
+import { BASE_URL } from '../config';
 
 const GanttChart = ({ projectId, teamMembers }) => {
   const [timelineView, setTimelineView] = useState("months");
@@ -10,7 +11,6 @@ const GanttChart = ({ projectId, teamMembers }) => {
     gantt.config.xml_date = "%Y-%m-%d %H:%i:%s";
     gantt.config.show_progress = true;
     gantt.config.drag_progress = true;
-    
 
     // Progress text inside task bar
     gantt.templates.progress_text = function (start, end, task) {
@@ -158,8 +158,8 @@ document.head.appendChild(taskStyles);
     const fetchData = async () => {
       try {
         const [tasksResponse, linksResponse] = await Promise.all([
-          axios.get(`http://localhost:5000/api/projects/${projectId}/tasks`),
-          axios.get(`http://localhost:5000/api/projects/${projectId}/links`),
+          axios.get(`${BASE_URL}/api/projects/${projectId}/tasks`),
+          axios.get(`${BASE_URL}/api/projects/${projectId}/links`),
         ]);
 
         if (!Array.isArray(tasksResponse.data.data) || !Array.isArray(linksResponse.data)) {
@@ -200,7 +200,7 @@ document.head.appendChild(taskStyles);
         };
 
         const response = await axios.post(
-          `http://localhost:5000/api/projects/${projectId}/tasks`,
+          `${BASE_URL}/api/projects/${projectId}/tasks`,
           formattedTask
         );
 
@@ -228,7 +228,7 @@ document.head.appendChild(taskStyles);
         };
 
         await axios.put(
-          `http://localhost:5000/api/projects/${projectId}/tasks/${id}`,
+          `${BASE_URL}/api/projects/${projectId}/tasks/${id}`,
           formattedTask
         );
       } catch (error) {
@@ -239,7 +239,7 @@ document.head.appendChild(taskStyles);
     const deleteTask = async (id) => {
       try {
         await axios.delete(
-          `http://localhost:5000/api/projects/${projectId}/tasks/${id}`
+          `${BASE_URL}/api/projects/${projectId}/tasks/${id}`
         );
       } catch (error) {
         console.error("Failed to delete task:", error.message);
@@ -255,7 +255,7 @@ document.head.appendChild(taskStyles);
         };
 
         const response = await axios.post(
-          `http://localhost:5000/api/projects/${projectId}/links`,
+          `${BASE_URL}/api/projects/${projectId}/links`,
           formattedLink
         );
 
@@ -270,7 +270,7 @@ document.head.appendChild(taskStyles);
 
     const deleteLink = async (id) => {
       try {
-        await axios.delete(`http://localhost:5000/api/projects/${projectId}/links/${id}`);
+        await axios.delete(`${BASE_URL}/api/projects/${projectId}/links/${id}`);
       } catch (error) {
         console.error("Failed to delete link:", error.message);
       }
