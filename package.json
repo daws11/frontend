@@ -41,7 +41,7 @@
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
-  "proxy": "http://localhost:5000",
+  "proxy": "https://len-sync-2620a7c9245e.herokuapp.com",
   "eslintConfig": {
     "extends": [
       "react-app",

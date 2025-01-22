@@ -9,7 +9,7 @@ const Login = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const [ setOpen] = useState(false);
+  const [ open,setOpen] = useState(false);
   const [errorOpen, setErrorOpen] = useState(false);
   const navigate = useNavigate();
 

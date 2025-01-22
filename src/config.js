@@ -1,1 +1,1 @@
-export const BASE_URL = 'https://len-sync-2620a7c9245e.herokuapp.com/';
+export const BASE_URL = 'https://len-sync-2620a7c9245e.herokuapp.com';
