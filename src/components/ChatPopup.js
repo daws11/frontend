@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import io from 'socket.io-client';
 import axios from 'axios';
 import authService from '../services/authService';
-import { Send, X, MoreVertical, Image, Video, Trash2 } from 'lucide-react';
+import { Send, X, MoreVertical, Image, Trash2 } from 'lucide-react';
 import { BASE_URL } from '../config';
 
 const ChatPopup = ({ projectId, projectName, teamMembers, projectLeaderName, onClose }) => {
