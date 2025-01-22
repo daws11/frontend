@@ -1,7 +1,8 @@
 import axios from 'axios';
 import {jwtDecode} from 'jwt-decode';
+import { BASE_URL } from '../config';
 
-const API_URL = 'http://localhost:5000/api/auth';
+const API_URL = `${BASE_URL}/api/auth`;
 
 const register = (formData) => {
   return axios.post(`${API_URL}/register`, formData, {
