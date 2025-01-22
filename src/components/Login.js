@@ -37,6 +37,7 @@ const Login = () => {
 
   const handleClose = () => {
     setOpen(false);
+    open(false);
     setErrorOpen(false);
   };
 
