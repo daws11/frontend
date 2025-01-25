@@ -9,7 +9,12 @@ const ProjectList = () => {
   useEffect(() => {
     const fetchProjects = async () => {
       try {
-        const response = await axios.get(`${BASE_URL}/api/projects`);
+        const token = localStorage.getItem('token');
+        const response = await axios.get(`${BASE_URL}/api/projects`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
         setProjects(response.data);
       } catch (error) {
         console.error('Failed to fetch projects:', error);
@@ -21,7 +26,12 @@ const ProjectList = () => {
 
   const handleDelete = async (id) => {
     try {
-      await axios.delete(`${BASE_URL}/api/projects/${id}`);
+      const token = localStorage.getItem('token');
+      await axios.delete(`${BASE_URL}/api/projects/${id}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
       setProjects(projects.filter((project) => project.id !== id));
     } catch (error) {
       console.error('Failed to delete project:', error);
