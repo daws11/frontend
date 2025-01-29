@@ -5,7 +5,7 @@ import axios from "axios";
 import { BASE_URL } from '../config';
 
 const GanttChart = ({ projectId, teamMembers }) => {
-  const [timelineView, setTimelineView] = useState("months");
+  const [timelineView, setTimelineView] = useState("quarters");
 
   useEffect(() => {
     gantt.config.xml_date = "%Y-%m-%d %H:%i:%s";

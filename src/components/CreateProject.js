@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Container, TextField, Button, Typography, Box, Paper, Snackbar, Alert, MenuItem, Checkbox, FormControlLabel, InputAdornment } from '@mui/material';
+import { Container, TextField, Button, Typography, Box, Paper, Snackbar, Alert, MenuItem, Checkbox, FormControlLabel, InputAdornment, Pagination } from '@mui/material';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import Modal from '@mui/material/Modal';
@@ -110,6 +110,28 @@ const CreateProject = () => {
 
   const handleOpenModal = () => setIsModalOpen(true);
   const handleCloseModal = () => setIsModalOpen(false);
+
+  const [searchTerm, setSearchTerm] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 8;
+
+  const filteredTeamMembers = availableTeamMembers.filter((user) =>
+    user.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const paginatedTeamMembers = filteredTeamMembers.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  const handleSearchChange = (e) => {
+    setSearchTerm(e.target.value);
+    setCurrentPage(1);
+  };
+
+  const handlePageChange = (event, value) => {
+    setCurrentPage(value);
+  };
 
   return (
     <Container component="main" maxWidth="sm">
@@ -296,7 +318,18 @@ const CreateProject = () => {
           <Typography variant="h6" align="center" sx={{ mb: 2 }}>
             Select Team Members
           </Typography>
-          {availableTeamMembers.map((user) => (
+          <TextField
+            variant="outlined"
+            margin="normal"
+            fullWidth
+            id="search"
+            label="Search Team Members"
+            name="search"
+            autoComplete="search"
+            value={searchTerm}
+            onChange={handleSearchChange}
+          />
+          {paginatedTeamMembers.map((user) => (
             <Box key={user.id} display="flex" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
               <Typography>{user.name}</Typography>
               <Button
@@ -312,6 +345,14 @@ const CreateProject = () => {
               </Button>
             </Box>
           ))}
+          <Box display="flex" justifyContent="center" sx={{ mt: 2 }}>
+            <Pagination
+              count={Math.ceil(filteredTeamMembers.length / itemsPerPage)}
+              page={currentPage}
+              onChange={handlePageChange}
+              color="primary"
+            />
+          </Box>
           <Button variant="outlined" fullWidth onClick={handleCloseModal} sx={{ mt: 2 }}>
             Close
           </Button>

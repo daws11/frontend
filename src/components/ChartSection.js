@@ -7,7 +7,6 @@ import {
     ComposedChart,
     CartesianGrid,
     Line,
-    Area,
     Bar,
     XAxis,
     YAxis,
@@ -17,28 +16,40 @@ import {
 } from 'recharts';
 
 const ChartSection = ({ tasks }) => {
+    // State untuk menyimpan data kemajuan keseluruhan tugas
     const [overallTask, setOverallTask] = useState([
         { name: 'Completed', value: 0 },
         { name: 'Remaining', value: 100 },
     ]);
+
+    // State untuk menyimpan data kemajuan tugas individu
     const [taskProgress, setTaskProgress] = useState([]);
+
+    // State untuk menyimpan jumlah tugas per anggota tim
     const [teamTaskCount, setTeamTaskCount] = useState([]);
 
+    // Menggunakan useEffect untuk memproses data setiap kali tasks berubah
     useEffect(() => {
+        console.log('Tasks:', tasks); // Log data tasks
+
         if (tasks.length > 0) {
+            // Memisahkan tugas utama dan subtugas
             const mainTasks = tasks.filter(task => task.parent_id === null);
             const subTasks = tasks.filter(task => task.parent_id !== null);
 
+            // Menghitung persentase tugas yang telah diselesaikan dan yang tersisa
             const overallCompleted = mainTasks.length > 0 
                 ? mainTasks.reduce((acc, task) => acc + (task.progress * 100), 0) / mainTasks.length 
                 : 0;
             const overallRemaining = 100 - overallCompleted;
 
+            // Mengupdate state overallTask dengan data yang baru
             setOverallTask([
                 { name: 'Completed', value: parseFloat(overallCompleted.toFixed(1)) },
                 { name: 'Remaining', value: parseFloat(overallRemaining.toFixed(1)) },
             ]);
 
+            // Membuat data untuk grafik kemajuan tugas individu
             const taskProgressData = mainTasks.map(task => ({
                 name: task.text,
                 subtask: subTasks.filter(subtask => subtask.parent_id === task.id).length,
@@ -46,8 +57,12 @@ const ChartSection = ({ tasks }) => {
                 remaining: parseFloat((100 - (task.progress * 100)).toFixed(1)),
             }));
 
+            console.log('Task Progress Data:', taskProgressData); // Log data task progress
+
+            // Mengupdate state taskProgress dengan data yang baru
             setTaskProgress(taskProgressData);
 
+            // Menghitung jumlah tugas per anggota tim
             const teamTaskCountData = tasks.reduce((acc, task) => {
                 const assignee = task.assigned_to_name || 'Unassigned';
                 if (!acc[assignee]) {
@@ -57,6 +72,7 @@ const ChartSection = ({ tasks }) => {
                 return acc;
             }, {});
 
+            // Mengubah objek teamTaskCountData menjadi array untuk digunakan dalam grafik
             const teamTaskCountArray = Object.keys(teamTaskCountData).map(assignee => ({
                 name: assignee,
                 taskCount: teamTaskCountData[assignee],
@@ -64,12 +80,15 @@ const ChartSection = ({ tasks }) => {
 
             console.log('Team Task Count Data:', teamTaskCountArray); // Log data to check
 
+            // Mengupdate state teamTaskCount dengan data yang baru
             setTeamTaskCount(teamTaskCountArray);
         }
     }, [tasks]);
 
+    // Warna untuk grafik Pie
     const COLORS = ['#0088FE', '#FF8042'];
 
+    // Formatter untuk tooltip
     const tooltipFormatter = (value, name) => {
         if (name === 'progress' || name === 'remaining') {
             return `${parseFloat(value.toFixed(1))}%`;
@@ -112,12 +131,13 @@ const ChartSection = ({ tasks }) => {
                 </div>
             </div>
 
+            {/* Team Task Count Bar Chart */}
             <div className="bg-white rounded-lg shadow-sm p-6">
                 <div className="flex items-center justify-between mb-4">
                     <h2 className="text-lg font-semibold">Team Task Count</h2>
                 </div>
                 <div className="h-80">
-                <ResponsiveContainer width="100%" height="100%">
+                    <ResponsiveContainer width="100%" height="100%">
                         <BarChart
                             width={500}
                             height={300}
@@ -141,6 +161,7 @@ const ChartSection = ({ tasks }) => {
                 </div>
             </div>
 
+            {/* Task Progress Composed Chart */}
             <div className="bg-white rounded-lg shadow-sm p-6 col-span-2">
                 <div className="flex items-center justify-between mb-4">
                     <h2 className="text-lg font-semibold">Task Progress</h2>
@@ -148,7 +169,7 @@ const ChartSection = ({ tasks }) => {
                 <div className="h-80">
                     <ResponsiveContainer width="100%" height="100%">
                         <ComposedChart
-                            layout="horizontal"
+                            layout="vertical" // Change to vertical layout
                             width={500}
                             height={400}
                             data={taskProgress}
@@ -156,16 +177,16 @@ const ChartSection = ({ tasks }) => {
                                 top: 20,
                                 right: 20,
                                 bottom: 20,
-                                left: 20,
+                                left: 200, // Increase left margin for long task names
                             }}
                         >
                             <CartesianGrid stroke="#f5f5f5" />
-                            <XAxis dataKey="name" type="category" scale="band" />
-                            <YAxis type="number" />
+                            <XAxis type="number" domain={[0, 100]} /> 
+                            <YAxis dataKey="name" type="category" width={150} />
                             <Tooltip formatter={tooltipFormatter} />
                             <Legend />
-                            <Bar dataKey="progress" barSize={20} fill="#413ea0" />
-                            <Area dataKey="remaining" fill="#8884d8" stroke="#8884d8" fillOpacity={0.4} />
+                            <Bar dataKey="progress" barSize={20} fill="#413ea0" stackId="a" />
+                            <Bar dataKey="remaining" barSize={20} fill="#8884d8" stackId="a" opacity={0.4} />
                             <Line dataKey="subtask" stroke="#ff7300" />
                         </ComposedChart>
                     </ResponsiveContainer>
